@@ -12,11 +12,11 @@ export default function Home() {
     <div className="pb-10 px-6 pt-4">
       {/* Hero / Featured Section */}
       {/* Hero / Welcome Section */}
-      <div className="relative bg-gradient-to-b from-purple-900/80 to-[#121212] rounded-t-3xl p-8 flex flex-col md:flex-row gap-8 items-end mb-10 transition-all hover:bg-purple-900/90 group">
+      <div className="relative bg-gradient-to-b from-purple-900/80 to-[#121212] rounded-t-3xl p-8 flex flex-col md:flex-row gap-8 items-center md:items-end text-center md:text-left mb-10 transition-all hover:bg-purple-900/90 group">
         <div className="flex-1">
           <p className="text-sm font-bold text-white mb-2 uppercase tracking-wider">Welcome to</p>
-          <h1 className="text-5xl md:text-7xl font-black text-white mb-6 leading-tight tracking-tight">MomoMusicQ</h1>
-          <p className="text-white/70 text-lg font-bold mb-8 max-w-2xl">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl font-black text-white mb-6 leading-tight tracking-tight">MomoMusicQ</h1>
+          <p className="text-white/70 text-lg font-bold mb-8 max-w-2xl mx-auto md:mx-0">
             나만의 AI 음악 스튜디오에 오신 것을 환영합니다. <br />
             다양한 장르의 음악을 감상하고, 나만의 플레이리스트를 만들어보세요.
           </p>
