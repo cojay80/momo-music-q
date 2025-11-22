@@ -43,6 +43,12 @@ export default function Header() {
             <div className="flex items-center gap-4">
                 {user ? (
                     <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => navigate('/admin')}
+                            className="px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-full text-white text-sm font-bold transition-colors shadow-lg shadow-purple-900/20"
+                        >
+                            Upload
+                        </button>
                         <span className="text-sm font-bold text-white hidden sm:block">Admin</span>
                         <button
                             onClick={handleLogout}
