@@ -22,7 +22,9 @@ export default function LyricsOverlay({
                 <p className="text-lg text-purple-400 mb-10">{track.artist}</p>
 
                 <div className="space-y-6 max-w-lg w-full">
-                    {track.lyrics ? track.lyrics.map((l, i) => (
+                    {track.lyrics ? track.lyrics.map((line, i) => {
+                        const lineText = typeof line === 'string' ? line : line?.text || '';
+                        return (
                         <p
                             key={i}
                             ref={i === activeLyricIndex ? activeLyricRef : null}
@@ -31,9 +33,9 @@ export default function LyricsOverlay({
                                 : 'text-slate-600 hover:text-slate-500'
                                 }`}
                         >
-                            {l}
+                            {lineText}
                         </p>
-                    )) : <p className="text-slate-500">등록된 가사가 없습니다.</p>}
+                    )}) : <p className="text-slate-500">No lyrics available.</p>}
                 </div>
             </div>
         </div>

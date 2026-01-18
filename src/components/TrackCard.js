@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, ChevronRight, Trash2 } from 'lucide-react';
+import { Play, ChevronRight, Trash2, Info } from 'lucide-react';
 
 export default function TrackCard({
     track,
@@ -8,7 +8,10 @@ export default function TrackCard({
     isPlaying,
     onClick,
     onDelete,
-    isAdmin
+    isAdmin,
+    onDetails,
+    metaText,
+    showMeta = true
 }) {
     return (
         <div
@@ -31,7 +34,21 @@ export default function TrackCard({
                 <p className="text-sm text-slate-400 truncate">{track.artist}</p>
             </div>
 
-            <div className="hidden sm:block text-sm text-slate-500 font-medium px-4">{track.genre}</div>
+            {showMeta && (
+                <div className="hidden sm:block text-sm text-slate-500 font-medium px-4">
+                    {metaText || track.genre}
+                </div>
+            )}
+
+            {onDetails && (
+                <button
+                    onClick={(e) => { e.stopPropagation(); onDetails(track); }}
+                    className="p-2 text-slate-600 hover:text-white hover:bg-white/10 rounded-full transition-all"
+                    title="Details"
+                >
+                    <Info size={18} />
+                </button>
+            )}
 
             {isAdmin && (
                 <button

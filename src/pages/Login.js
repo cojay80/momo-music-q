@@ -15,9 +15,9 @@ export default function Login() {
         setError("");
         try {
             await signInWithEmailAndPassword(auth, email, password);
-            navigate('/'); // Redirect to home on success
+            navigate('/');
         } catch (err) {
-            setError("이메일 또는 비밀번호가 올바르지 않습니다.");
+            setError("Invalid email or password.");
         }
     };
 
@@ -29,28 +29,28 @@ export default function Login() {
                         <LogIn className="text-black" size={24} />
                     </div>
                 </div>
-                <h2 className="text-3xl font-bold text-white text-center mb-8">MomoMusic에 로그인</h2>
+                <h2 className="text-3xl font-bold text-white text-center mb-8">Log in to MomoMusic</h2>
 
                 <form onSubmit={handleLogin} className="space-y-4">
                     <div>
-                        <label className="text-sm font-bold text-white block mb-2">이메일 주소</label>
+                        <label className="text-sm font-bold text-white block mb-2">Email</label>
                         <input
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             className="w-full bg-[#121212] border border-[#727272] rounded-md p-3 text-white focus:border-white focus:outline-none transition-colors hover:border-white"
-                            placeholder="이메일"
+                            placeholder="name@domain.com"
                             required
                         />
                     </div>
                     <div>
-                        <label className="text-sm font-bold text-white block mb-2">비밀번호</label>
+                        <label className="text-sm font-bold text-white block mb-2">Password</label>
                         <input
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             className="w-full bg-[#121212] border border-[#727272] rounded-md p-3 text-white focus:border-white focus:outline-none transition-colors hover:border-white"
-                            placeholder="비밀번호"
+                            placeholder="Password"
                             required
                         />
                     </div>
@@ -58,13 +58,13 @@ export default function Login() {
                     {error && <p className="text-red-500 text-sm font-medium">{error}</p>}
 
                     <button type="submit" className="w-full py-3 bg-green-500 rounded-full font-bold text-black hover:scale-105 transition-transform mt-4">
-                        로그인하기
+                        Log in
                     </button>
                 </form>
 
                 <div className="mt-8 text-center border-t border-white/10 pt-6">
                     <p className="text-slate-400 text-sm">
-                        계정이 없으신가요? <Link to="/signup" className="text-white font-bold hover:underline">MomoMusic 가입하기</Link>
+                        New here? <Link to="/signup" className="text-white font-bold hover:underline">Create an account</Link>
                     </p>
                 </div>
             </div>

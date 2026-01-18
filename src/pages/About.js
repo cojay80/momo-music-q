@@ -16,8 +16,9 @@ export default function About() {
                 </div>
                 <h2 className="text-3xl font-bold mb-6 text-white">Created by Momo</h2>
                 <p className="text-slate-400 text-lg leading-relaxed mb-12 max-w-2xl mx-auto">
-                    "상상하는 모든 것이 음악이 되는 곳"<br />
-                    AI 기술을 활용해 일상에 특별한 BGM을 선물합니다.
+                    "Music can turn ordinary moments into vivid scenes."
+                    <br />
+                    This space shares AI-powered tracks for focus and calm.
                 </p>
                 <div className="flex justify-center gap-4 sm:gap-8">
                     <div className="px-8 py-6 rounded-2xl bg-slate-800/50 border border-white/5 backdrop-blur-sm w-40">
@@ -25,7 +26,7 @@ export default function About() {
                         <div className="text-xs text-slate-500 font-bold uppercase tracking-wider">Tracks</div>
                     </div>
                     <div className="px-8 py-6 rounded-2xl bg-slate-800/50 border border-white/5 backdrop-blur-sm w-40">
-                        <div className="text-3xl font-bold text-white mb-1">∞</div>
+                        <div className="text-3xl font-bold text-white mb-1">Growing</div>
                         <div className="text-xs text-slate-500 font-bold uppercase tracking-wider">Listeners</div>
                     </div>
                 </div>

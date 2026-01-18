@@ -3,12 +3,11 @@ import { useMusic } from '../context/MusicContext';
 
 export default function Artists() {
     const { tracks } = useMusic();
-    // Extract unique artists
     const artists = [...new Set(tracks.map(t => t.artist))];
 
     return (
         <div className="p-8 text-white">
-            <h1 className="text-4xl font-bold mb-6">아티스트</h1>
+            <h1 className="text-4xl font-bold mb-6">Artists</h1>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
                 {artists.map((artist, index) => (
                     <div key={index} className="bg-[#181818] p-4 rounded-lg hover:bg-[#282828] transition-colors cursor-pointer text-center">

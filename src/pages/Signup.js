@@ -16,23 +16,23 @@ export default function Signup() {
         setError("");
 
         if (password !== confirmPassword) {
-            setError("비밀번호가 일치하지 않습니다.");
+            setError("Passwords do not match.");
             return;
         }
 
         if (password.length < 6) {
-            setError("비밀번호는 6자 이상이어야 합니다.");
+            setError("Password must be at least 6 characters.");
             return;
         }
 
         try {
             await createUserWithEmailAndPassword(auth, email, password);
-            navigate('/'); // Redirect to home on success
+            navigate('/');
         } catch (err) {
             if (err.code === 'auth/email-already-in-use') {
-                setError("이미 사용 중인 이메일입니다.");
+                setError("Email is already in use.");
             } else {
-                setError("회원가입 중 오류가 발생했습니다: " + err.message);
+                setError("Signup failed: " + err.message);
             }
         }
     };
@@ -45,11 +45,11 @@ export default function Signup() {
                         <UserPlus className="text-black" size={24} />
                     </div>
                 </div>
-                <h2 className="text-3xl font-bold text-white text-center mb-8">가입하고 듣기</h2>
+                <h2 className="text-3xl font-bold text-white text-center mb-8">Create account</h2>
 
                 <form onSubmit={handleSignup} className="space-y-4">
                     <div>
-                        <label className="text-sm font-bold text-white block mb-2">이메일 주소</label>
+                        <label className="text-sm font-bold text-white block mb-2">Email</label>
                         <input
                             type="email"
                             value={email}
@@ -60,24 +60,24 @@ export default function Signup() {
                         />
                     </div>
                     <div>
-                        <label className="text-sm font-bold text-white block mb-2">비밀번호</label>
+                        <label className="text-sm font-bold text-white block mb-2">Password</label>
                         <input
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             className="w-full bg-[#121212] border border-[#727272] rounded-md p-3 text-white focus:border-white focus:outline-none transition-colors hover:border-white"
-                            placeholder="비밀번호 생성"
+                            placeholder="Password"
                             required
                         />
                     </div>
                     <div>
-                        <label className="text-sm font-bold text-white block mb-2">비밀번호 확인</label>
+                        <label className="text-sm font-bold text-white block mb-2">Confirm password</label>
                         <input
                             type="password"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             className="w-full bg-[#121212] border border-[#727272] rounded-md p-3 text-white focus:border-white focus:outline-none transition-colors hover:border-white"
-                            placeholder="비밀번호 확인"
+                            placeholder="Confirm password"
                             required
                         />
                     </div>
@@ -85,13 +85,13 @@ export default function Signup() {
                     {error && <p className="text-red-500 text-sm font-medium">{error}</p>}
 
                     <button type="submit" className="w-full py-3 bg-green-500 rounded-full font-bold text-black hover:scale-105 transition-transform mt-4">
-                        가입하기
+                        Sign up
                     </button>
                 </form>
 
                 <div className="mt-8 text-center border-t border-white/10 pt-6">
                     <p className="text-slate-400 text-sm">
-                        이미 계정이 있으신가요? <Link to="/login" className="text-white font-bold hover:underline">로그인하기</Link>
+                        Already have an account? <Link to="/login" className="text-white font-bold hover:underline">Log in</Link>
                     </p>
                 </div>
             </div>

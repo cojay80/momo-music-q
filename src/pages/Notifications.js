@@ -5,13 +5,13 @@ export default function Notifications() {
     const notifications = [
         { id: 1, type: 'like', user: 'User123', content: 'liked your track "Summer Vibes"', time: '2 hours ago', icon: Heart, color: 'text-pink-500' },
         { id: 2, type: 'follow', user: 'MusicLover', content: 'started following you', time: '5 hours ago', icon: User, color: 'text-blue-500' },
-        { id: 3, type: 'system', user: 'MomoMusicQ', content: 'New features available! Check out the new Charts page.', time: '1 day ago', icon: Bell, color: 'text-yellow-500' },
+        { id: 3, type: 'system', user: 'MomoMusicQ', content: 'New features available! Check out the Charts page.', time: '1 day ago', icon: Bell, color: 'text-yellow-500' },
         { id: 4, type: 'release', user: 'ArtistXYZ', content: 'released a new track "Nightfall"', time: '2 days ago', icon: Music, color: 'text-green-500' },
     ];
 
     return (
         <div className="p-8 text-white">
-            <h1 className="text-4xl font-bold mb-8">알림</h1>
+            <h1 className="text-4xl font-bold mb-8">Notifications</h1>
             <div className="space-y-4 max-w-3xl">
                 {notifications.map(notif => (
                     <div key={notif.id} className="flex items-center gap-4 p-4 bg-[#181818] rounded-lg hover:bg-[#282828] transition-colors cursor-pointer">

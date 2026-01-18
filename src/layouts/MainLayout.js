@@ -13,11 +13,21 @@ export default function MainLayout() {
         currentTrack,
         isPlaying,
         setIsPlaying,
+        isShuffle,
+        repeatMode,
+        playNext,
+        playPrevious,
+        toggleShuffle,
+        cycleRepeatMode,
+        volume,
+        setVolume,
         isLoading,
         audioRef
     } = useMusic();
 
     const [progress, setProgress] = useState(0);
+    const [currentTime, setCurrentTime] = useState(0);
+    const [duration, setDuration] = useState(0);
     const [showLyrics, setShowLyrics] = useState(false);
     const [activeLyricIndex, setActiveLyricIndex] = useState(0);
     const activeLyricRef = useRef(null);
@@ -28,14 +38,22 @@ export default function MainLayout() {
             audioRef.current.src = currentTrack.audioSrc;
             if (isPlaying) audioRef.current.play().catch(() => { });
             setActiveLyricIndex(0);
+            setProgress(0);
+            setCurrentTime(0);
         }
-    }, [currentTrack]);
+    }, [audioRef, currentTrack, isPlaying]);
 
     useEffect(() => {
         if (audioRef.current) {
             isPlaying ? audioRef.current.play().catch(() => { }) : audioRef.current.pause();
         }
-    }, [isPlaying]);
+    }, [audioRef, isPlaying]);
+
+    useEffect(() => {
+        if (audioRef.current) {
+            audioRef.current.volume = volume;
+        }
+    }, [audioRef, volume]);
 
     const onTimeUpdate = () => {
         if (audioRef.current) {
@@ -43,13 +61,43 @@ export default function MainLayout() {
             const duration = audioRef.current.duration;
             const percent = (currentTime / duration) * 100;
             setProgress(percent || 0);
+            setCurrentTime(currentTime || 0);
+            setDuration(duration || 0);
 
-            if (currentTrack?.lyrics && duration > 0) {
-                const totalLines = currentTrack.lyrics.length;
-                const calculatedIndex = Math.floor((currentTime / duration) * totalLines);
-                setActiveLyricIndex(Math.min(calculatedIndex, totalLines - 1));
+            if (currentTrack?.lyrics && currentTrack.lyrics.length > 0) {
+                const firstLine = currentTrack.lyrics[0];
+                const hasTimestamps = typeof firstLine === 'object' && firstLine !== null && typeof firstLine.time === 'number';
+                if (hasTimestamps) {
+                    const currentIndex = currentTrack.lyrics.findIndex((line, index) => {
+                        const nextLine = currentTrack.lyrics[index + 1];
+                        const nextTime = nextLine && typeof nextLine.time === 'number' ? nextLine.time : Number.POSITIVE_INFINITY;
+                        return currentTime >= line.time && currentTime < nextTime;
+                    });
+                    setActiveLyricIndex(currentIndex === -1 ? currentTrack.lyrics.length - 1 : currentIndex);
+                } else if (duration > 0) {
+                    const totalLines = currentTrack.lyrics.length;
+                    const calculatedIndex = Math.floor((currentTime / duration) * totalLines);
+                    setActiveLyricIndex(Math.min(calculatedIndex, totalLines - 1));
+                }
             }
         }
+    };
+
+    const onLoadedMetadata = () => {
+        if (audioRef.current) {
+            setDuration(audioRef.current.duration || 0);
+        }
+    };
+
+    const onEnded = () => {
+        if (repeatMode === 'one' && audioRef.current) {
+            audioRef.current.currentTime = 0;
+            audioRef.current.play().catch(() => { });
+            return;
+        }
+        playNext();
+        setProgress(0);
+        setCurrentTime(0);
     };
 
     // Lyrics Auto Scroll
@@ -76,10 +124,10 @@ export default function MainLayout() {
     return (
         <div className="h-screen bg-[#121212] text-white font-sans flex flex-col overflow-hidden relative">
             {/* Background Effects */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full mix-blend-screen filter blur-3xl opacity-30 animate-blob"></div>
-                <div className="absolute top-0 right-1/4 w-96 h-96 bg-blue-500/20 rounded-full mix-blend-screen filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
-                <div className="absolute -bottom-32 left-1/3 w-96 h-96 bg-pink-500/20 rounded-full mix-blend-screen filter blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
+            <div className="absolute inset-0 overflow-hidden pointer-events-none bg-[#0a0a0a]">
+                <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-purple-900/40 rounded-full mix-blend-screen filter blur-[100px] opacity-50 animate-blob"></div>
+                <div className="absolute top-[20%] right-[-10%] w-[400px] h-[400px] bg-blue-900/40 rounded-full mix-blend-screen filter blur-[100px] opacity-50 animate-blob animation-delay-2000"></div>
+                <div className="absolute bottom-[-10%] left-[20%] w-[500px] h-[500px] bg-indigo-900/40 rounded-full mix-blend-screen filter blur-[100px] opacity-50 animate-blob animation-delay-4000"></div>
             </div>
 
             <div className="flex-1 flex overflow-hidden z-10">
@@ -91,7 +139,7 @@ export default function MainLayout() {
                     {/* Header is now part of the center content flow, sticky at top */}
                     <Header />
 
-                    <div className="flex-1 overflow-y-auto pb-24 scrollbar-hide">
+                    <div className="flex-1 overflow-y-auto pb-32 scrollbar-hide">
                         <Outlet />
                     </div>
                 </div>
@@ -106,12 +154,23 @@ export default function MainLayout() {
                     currentTrack={currentTrack}
                     isPlaying={isPlaying}
                     onPlayPause={() => setIsPlaying(!isPlaying)}
+                    onNext={playNext}
+                    onPrevious={playPrevious}
+                    isShuffle={isShuffle}
+                    onToggleShuffle={toggleShuffle}
+                    repeatMode={repeatMode}
+                    onToggleRepeat={cycleRepeatMode}
                     progress={progress}
+                    currentTime={currentTime}
+                    duration={duration}
+                    volume={volume}
+                    onVolumeChange={setVolume}
                     showLyrics={showLyrics}
                     onToggleLyrics={() => setShowLyrics(!showLyrics)}
                     audioRef={audioRef}
                     onTimeUpdate={onTimeUpdate}
-                    onEnded={() => setIsPlaying(false)}
+                    onLoadedMetadata={onLoadedMetadata}
+                    onEnded={onEnded}
                 />
             </div>
 

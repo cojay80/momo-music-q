@@ -4,6 +4,7 @@ import { MusicProvider } from './context/MusicContext';
 import MainLayout from './layouts/MainLayout';
 import Home from './pages/Home';
 import Tracks from './pages/Tracks';
+import TrackDetail from './pages/TrackDetail';
 import About from './pages/About';
 import Admin from './pages/Admin';
 import Login from './pages/Login';
@@ -19,11 +20,17 @@ import Notifications from './pages/Notifications';
 export default function App() {
   return (
     <MusicProvider>
-      <BrowserRouter>
+      <BrowserRouter
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true
+        }}
+      >
         <Routes>
           <Route path="/" element={<MainLayout />}>
             <Route index element={<Home />} />
             <Route path="tracks" element={<Tracks />} />
+            <Route path="tracks/:trackId" element={<TrackDetail />} />
             <Route path="about" element={<About />} />
             <Route path="library" element={<LibraryPage />} />
             <Route path="charts" element={<Charts />} />

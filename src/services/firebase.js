@@ -4,25 +4,26 @@ import { getStorage } from "firebase/storage";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyChLvuNKfte-6fPJxXX1Ch0czwF20AUnHA",
-    authDomain: "momo-music-db.firebaseapp.com",
-    projectId: "momo-music-db",
-    storageBucket: "momo-music-db.firebasestorage.app",
-    messagingSenderId: "523987636658",
-    appId: "1:523987636658:web:7c503b3066571bb10494ab"
+    apiKey: process.env.REACT_APP_FIREBASE_API_KEY || "",
+    authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || "",
+    projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID || "",
+    storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || "",
+    messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || "",
+    appId: process.env.REACT_APP_FIREBASE_APP_ID || ""
 };
 
 let app, db, storage, auth;
 
 try {
-    if (firebaseConfig.apiKey !== "여기에_apiKey_붙여넣기") {
+    const hasFirebaseConfig = Object.values(firebaseConfig).every((value) => value);
+    if (hasFirebaseConfig) {
         app = initializeApp(firebaseConfig);
         db = getFirestore(app);
         storage = getStorage(app);
         auth = getAuth(app);
     }
 } catch (e) {
-    console.error("Firebase 초기화 에러:", e);
+    console.error("Firebase init error:", e);
 }
 
 export { db, storage, auth };
