@@ -7,6 +7,7 @@ import Header from '../components/Header';
 import Player from '../components/Player';
 import LyricsOverlay from '../components/LyricsOverlay';
 import { Loader } from 'lucide-react';
+import { normalizeLyrics, resolveSyncedLyrics } from '../services/srtParser';
 
 export default function MainLayout() {
     const {
@@ -30,6 +31,7 @@ export default function MainLayout() {
     const [duration, setDuration] = useState(0);
     const [showLyrics, setShowLyrics] = useState(false);
     const [activeLyricIndex, setActiveLyricIndex] = useState(0);
+    const [syncedLyrics, setSyncedLyrics] = useState([]);
     const activeLyricRef = useRef(null);
 
     // Audio Logic
@@ -42,6 +44,29 @@ export default function MainLayout() {
             setCurrentTime(0);
         }
     }, [audioRef, currentTrack, isPlaying]);
+
+    useEffect(() => {
+        let cancelled = false;
+        if (!currentTrack) {
+            setSyncedLyrics([]);
+            return () => {
+                cancelled = true;
+            };
+        }
+
+        resolveSyncedLyrics(currentTrack)
+            .then((lyrics) => {
+                if (!cancelled) setSyncedLyrics(lyrics);
+            })
+            .catch((error) => {
+                console.error("SRT lyrics load failed:", error);
+                if (!cancelled) setSyncedLyrics(normalizeLyrics(currentTrack.lyrics));
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [currentTrack]);
 
     useEffect(() => {
         if (audioRef.current) {
@@ -64,18 +89,23 @@ export default function MainLayout() {
             setCurrentTime(currentTime || 0);
             setDuration(duration || 0);
 
-            if (currentTrack?.lyrics && currentTrack.lyrics.length > 0) {
-                const firstLine = currentTrack.lyrics[0];
-                const hasTimestamps = typeof firstLine === 'object' && firstLine !== null && typeof firstLine.time === 'number';
+            if (syncedLyrics && syncedLyrics.length > 0) {
+                const firstLine = syncedLyrics[0];
+                const hasTimestamps = typeof firstLine === 'object' && firstLine !== null && (typeof firstLine.time === 'number' || typeof firstLine.start === 'number');
                 if (hasTimestamps) {
-                    const currentIndex = currentTrack.lyrics.findIndex((line, index) => {
-                        const nextLine = currentTrack.lyrics[index + 1];
-                        const nextTime = nextLine && typeof nextLine.time === 'number' ? nextLine.time : Number.POSITIVE_INFINITY;
-                        return currentTime >= line.time && currentTime < nextTime;
+                    const currentIndex = syncedLyrics.findIndex((line, index) => {
+                        const start = typeof line.start === 'number' ? line.start : line.time;
+                        const nextLine = syncedLyrics[index + 1];
+                        const nextTime = typeof line.end === 'number' && Number.isFinite(line.end)
+                            ? line.end
+                            : nextLine && (typeof nextLine.start === 'number' || typeof nextLine.time === 'number')
+                            ? (typeof nextLine.start === 'number' ? nextLine.start : nextLine.time)
+                            : Number.POSITIVE_INFINITY;
+                        return currentTime >= start && currentTime < nextTime;
                     });
-                    setActiveLyricIndex(currentIndex === -1 ? currentTrack.lyrics.length - 1 : currentIndex);
+                    setActiveLyricIndex((prevIndex) => currentIndex === -1 ? prevIndex : currentIndex);
                 } else if (duration > 0) {
-                    const totalLines = currentTrack.lyrics.length;
+                    const totalLines = syncedLyrics.length;
                     const calculatedIndex = Math.floor((currentTime / duration) * totalLines);
                     setActiveLyricIndex(Math.min(calculatedIndex, totalLines - 1));
                 }
@@ -145,7 +175,10 @@ export default function MainLayout() {
                 </div>
 
                 {/* Right Sidebar */}
-                <RightSidebar />
+                <RightSidebar
+                    lyrics={syncedLyrics}
+                    activeLyricIndex={activeLyricIndex}
+                />
             </div>
 
             {/* Player */}
@@ -177,6 +210,7 @@ export default function MainLayout() {
             {showLyrics && (
                 <LyricsOverlay
                     track={currentTrack}
+                    lyrics={syncedLyrics}
                     activeLyricIndex={activeLyricIndex}
                     onClose={() => setShowLyrics(false)}
                     activeLyricRef={activeLyricRef}

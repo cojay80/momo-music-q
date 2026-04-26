@@ -1,13 +1,52 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMusic } from '../context/MusicContext';
 import { MoreHorizontal, Share2, MessageSquare, ThumbsUp, ChevronUp, ChevronDown, X } from 'lucide-react';
+import { addDoc, collection, getDocs, orderBy, query } from 'firebase/firestore';
+import { db } from '../services/firebase';
 
-export default function RightSidebar() {
-    const { currentTrack, addToPlaylist, toggleLike, likedTracks, queue, playTrack, moveQueueItem, removeFromQueue } = useMusic();
+export default function RightSidebar({ lyrics = [], activeLyricIndex = 0 }) {
+    const { currentTrack, addToPlaylist, toggleLike, likedTracks, queue, playTrack, moveQueueItem, removeFromQueue, user } = useMusic();
     const navigate = useNavigate();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [comments, setComments] = useState([]);
+    const lyricsBoxRef = useRef(null);
+    const activeLineRef = useRef(null);
+
+    useEffect(() => {
+        let cancelled = false;
+        async function loadComments() {
+            if (!db || !currentTrack?.id) {
+                setComments([]);
+                return;
+            }
+            try {
+                const q = query(collection(db, "tracks", currentTrack.id, "comments"), orderBy("createdAt", "asc"));
+                const snapshot = await getDocs(q);
+                if (!cancelled) {
+                    setComments(snapshot.docs.map((item) => ({ id: item.id, ...item.data() })));
+                }
+            } catch (error) {
+                console.error("Load comments failed:", error);
+            }
+        }
+        loadComments();
+        return () => {
+            cancelled = true;
+        };
+    }, [currentTrack?.id]);
+
+    useEffect(() => {
+        const box = lyricsBoxRef.current;
+        const line = activeLineRef.current;
+        if (!box || !line) return;
+
+        const targetTop = line.offsetTop - box.offsetTop - (box.clientHeight / 2) + (line.clientHeight / 2);
+        box.scrollTo({
+            top: Math.max(0, targetTop),
+            behavior: 'smooth'
+        });
+    }, [activeLyricIndex, currentTrack?.id]);
 
     if (!currentTrack) {
         return (
@@ -44,10 +83,25 @@ export default function RightSidebar() {
         }
     };
 
-    const handleAddComment = () => {
+    const handleAddComment = async () => {
         const text = window.prompt("Add a comment");
-        if (text) {
+        if (!text) return;
+        if (!db || !currentTrack?.id) {
             setComments((prev) => [...prev, { id: Date.now(), text }]);
+            return;
+        }
+        try {
+            const payload = {
+                text,
+                author: user?.email || "Guest",
+                userId: user?.uid || "guest",
+                createdAt: new Date()
+            };
+            const docRef = await addDoc(collection(db, "tracks", currentTrack.id, "comments"), payload);
+            setComments((prev) => [...prev, { id: docRef.id, ...payload }]);
+        } catch (error) {
+            console.error("Add comment failed:", error);
+            alert("Failed to add comment.");
         }
     };
 
@@ -100,6 +154,36 @@ export default function RightSidebar() {
                         </button>
                     </div>
                 )}
+
+                <div className="mb-6 border-t border-white/5 pt-5">
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-sm font-bold text-white uppercase tracking-wider">Lyrics</h3>
+                    </div>
+
+                    <div ref={lyricsBoxRef} className="max-h-56 overflow-y-auto pr-2 scrollbar-hide space-y-3">
+                        {lyrics.length > 0 ? (
+                            lyrics.map((line, index) => {
+                                const lineText = typeof line === 'string' ? line : line?.text || '';
+                                const isActive = index === activeLyricIndex;
+                                return (
+                                    <p
+                                        key={index}
+                                        ref={isActive ? activeLineRef : null}
+                                        className={`text-sm leading-relaxed transition-colors duration-300 ${
+                                            isActive
+                                                ? 'text-white font-bold'
+                                                : 'text-slate-500'
+                                        }`}
+                                    >
+                                        <span>{lineText}</span>
+                                    </p>
+                                );
+                            })
+                        ) : (
+                            <p className="text-slate-500 text-sm italic">No lyrics available.</p>
+                        )}
+                    </div>
+                </div>
             </div>
 
             <div className="px-6 py-4 border-t border-white/5 flex items-center justify-between text-slate-400 text-sm">
@@ -109,7 +193,7 @@ export default function RightSidebar() {
                         onClick={() => toggleLike(currentTrack.id)}
                     >
                         <ThumbsUp size={16} fill={isLiked ? "currentColor" : "none"} />
-                        <span>{isLiked ? '1.2k' : '1.2k'}</span>
+                        <span>{isLiked ? 1 : 0}</span>
                     </div>
                     <div className="flex items-center gap-1 hover:text-white cursor-pointer" onClick={handleAddComment}>
                         <MessageSquare size={16} />
@@ -127,9 +211,10 @@ export default function RightSidebar() {
                 {comments.length ? (
                     <div className="space-y-2">
                         {comments.map((comment) => (
-                            <p key={comment.id} className="text-sm text-slate-300 bg-white/5 rounded-lg px-3 py-2">
-                                {comment.text}
-                            </p>
+                                <div key={comment.id} className="text-sm text-slate-300 bg-white/5 rounded-lg px-3 py-2">
+                                    <p className="mb-1 text-[11px] text-slate-500">{comment.author || "Guest"}</p>
+                                    <p>{comment.text}</p>
+                                </div>
                         ))}
                     </div>
                 ) : (
@@ -137,27 +222,8 @@ export default function RightSidebar() {
                 )}
             </div>
 
-            <div className="p-6 border-t border-white/5 flex-1 overflow-y-auto scrollbar-hide">
-                <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-bold text-white uppercase tracking-wider">Lyrics</h3>
-                </div>
-
-                <div className="space-y-4 text-center">
-                    {currentTrack.lyrics && currentTrack.lyrics.length > 0 ? (
-                        currentTrack.lyrics.map((line, index) => {
-                            const lineText = typeof line === 'string' ? line : line?.text || '';
-                            return (
-                                <p key={index} className="text-slate-400 text-sm leading-relaxed hover:text-white transition-colors cursor-default">
-                                    {lineText}
-                                </p>
-                            );
-                        })
-                    ) : (
-                        <p className="text-slate-500 text-sm italic">No lyrics available.</p>
-                    )}
-                </div>
-
-                <div className="mt-8 pt-6 border-t border-white/5">
+            <div className="p-6 border-t border-white/5">
+                <div>
                     <h3 className="text-xs font-bold text-slate-500 uppercase mb-3">Tags</h3>
                     <div className="flex flex-wrap gap-2">
                         <span className="px-3 py-1 bg-white/5 rounded-full text-xs text-slate-300 hover:bg-white/10 cursor-pointer">K-Pop</span>

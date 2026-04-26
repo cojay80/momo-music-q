@@ -66,7 +66,7 @@ export default function Player({
 
             {/* Floating Glass Player */}
             <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4 pointer-events-none">
-                <div className="max-w-screen-2xl mx-auto pointer-events-auto">
+                <div className="w-full md:w-[80%] max-w-screen-xl mx-auto pointer-events-auto">
                     <div className="h-[88px] bg-[#121212]/80 backdrop-blur-xl border border-white/10 rounded-2xl flex items-center justify-between px-6 shadow-2xl shadow-black/50 relative overflow-hidden hover:border-white/20 transition-colors duration-300">
                         
                         {/* Track Info (Left) */}
