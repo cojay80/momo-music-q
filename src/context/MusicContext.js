@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
-import { collection, getDocs, query, orderBy, deleteDoc, doc, addDoc, updateDoc } from "firebase/firestore";
+import { collection, getDocs, query, orderBy, deleteDoc, doc, addDoc, updateDoc, setDoc } from "firebase/firestore";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { db, auth } from '../services/firebase';
 
@@ -16,6 +16,8 @@ const SAMPLE_TRACKS = [
     }
 ];
 
+const TRACK_FETCH_TIMEOUT_MS = 8000;
+
 const shuffleList = (list, currentTrack) => {
     const remaining = list.filter((track) => track.id !== currentTrack?.id);
     for (let i = remaining.length - 1; i > 0; i -= 1) {
@@ -26,6 +28,17 @@ const shuffleList = (list, currentTrack) => {
         return [currentTrack, ...remaining];
     }
     return remaining;
+};
+
+const withTimeout = (promise, timeoutMs, message) => {
+    let timeoutId;
+    const timeoutPromise = new Promise((_, reject) => {
+        timeoutId = window.setTimeout(() => reject(new Error(message)), timeoutMs);
+    });
+
+    return Promise.race([promise, timeoutPromise]).finally(() => {
+        window.clearTimeout(timeoutId);
+    });
 };
 
 export function MusicProvider({ children }) {
@@ -67,7 +80,11 @@ export function MusicProvider({ children }) {
 
         try {
             const q = query(collection(db, "tracks"), orderBy("createdAt", "desc"));
-            const querySnapshot = await getDocs(q);
+            const querySnapshot = await withTimeout(
+                getDocs(q),
+                TRACK_FETCH_TIMEOUT_MS,
+                "Track loading timed out. Check Firebase environment variables and Firestore rules."
+            );
             const loadedTracks = [];
             querySnapshot.forEach((docSnapshot) => {
                 loadedTracks.push({ id: docSnapshot.id, ...docSnapshot.data() });
@@ -81,6 +98,8 @@ export function MusicProvider({ children }) {
             }
         } catch (error) {
             console.error("Fetch tracks error:", error);
+            setTracks([]);
+            setCurrentTrack((prevTrack) => prevTrack || null);
         } finally {
             setIsLoading(false);
         }
@@ -186,6 +205,27 @@ export function MusicProvider({ children }) {
         }
     };
 
+    const updateTrack = async (trackId, updates) => {
+        if (!user || !db || !trackId) return;
+        try {
+            const nextUpdates = {
+                ...updates,
+                updatedAt: new Date()
+            };
+            await updateDoc(doc(db, "tracks", trackId), nextUpdates);
+            setTracks((prevTracks) => prevTracks.map((track) => (
+                track.id === trackId ? { ...track, ...nextUpdates } : track
+            )));
+            setCurrentTrack((prevTrack) => (
+                prevTrack?.id === trackId ? { ...prevTrack, ...nextUpdates } : prevTrack
+            ));
+            fetchTracks();
+        } catch (error) {
+            console.error("Update track failed:", error);
+            throw error;
+        }
+    };
+
     const filteredTracks = tracks.filter((track) => {
         const matchesSearch = track.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
             track.artist.toLowerCase().includes(searchQuery.toLowerCase());
@@ -209,6 +249,26 @@ export function MusicProvider({ children }) {
     useEffect(() => {
         fetchPlaylists();
     }, [fetchPlaylists]);
+
+    const fetchLikedTracks = useCallback(async () => {
+        if (!db || !user) {
+            const saved = localStorage.getItem("momo_liked_tracks");
+            setLikedTracks(new Set(saved ? JSON.parse(saved) : []));
+            return;
+        }
+        try {
+            const snapshot = await getDocs(collection(db, "users", user.uid, "likes"));
+            const next = new Set();
+            snapshot.forEach((docSnapshot) => next.add(docSnapshot.id));
+            setLikedTracks(next);
+        } catch (error) {
+            console.error("Fetch likes error:", error);
+        }
+    }, [user]);
+
+    useEffect(() => {
+        fetchLikedTracks();
+    }, [fetchLikedTracks]);
 
     const createPlaylist = async (name) => {
         if (!db) return;
@@ -252,14 +312,32 @@ export function MusicProvider({ children }) {
         }
     };
 
-    const toggleLike = (trackId) => {
+    const toggleLike = async (trackId) => {
         const newLiked = new Set(likedTracks);
+        const shouldUnlike = newLiked.has(trackId);
         if (newLiked.has(trackId)) {
             newLiked.delete(trackId);
         } else {
             newLiked.add(trackId);
         }
         setLikedTracks(newLiked);
+        localStorage.setItem("momo_liked_tracks", JSON.stringify([...newLiked]));
+
+        if (!db || !user) return;
+        try {
+            const likeRef = doc(db, "users", user.uid, "likes", trackId);
+            if (shouldUnlike) {
+                await deleteDoc(likeRef);
+            } else {
+                await setDoc(likeRef, {
+                    trackId,
+                    createdAt: new Date()
+                });
+            }
+        } catch (error) {
+            console.error("Toggle like error:", error);
+            fetchLikedTracks();
+        }
     };
 
     const moveQueueItem = (trackId, direction) => {
@@ -359,6 +437,7 @@ export function MusicProvider({ children }) {
         isLoading,
         handleLogout,
         handleDeleteTrack,
+        updateTrack,
         fetchTracks,
         audioRef,
         playlists,
