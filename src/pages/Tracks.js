@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Disc, Music } from 'lucide-react';
 import { useMusic } from '../context/MusicContext';
 import TrackCard from '../components/TrackCard';
+import TrackEditModal from '../components/TrackEditModal';
 
 export default function Tracks() {
-    const { filteredTracks, currentTrack, isPlaying, playTrack, user, handleDeleteTrack, selectedGenre, setSelectedGenre } = useMusic();
+    const { filteredTracks, currentTrack, isPlaying, playTrack, user, updateTrack, handleDeleteTrack, selectedGenre, setSelectedGenre } = useMusic();
     const navigate = useNavigate();
+    const [editingTrack, setEditingTrack] = useState(null);
 
     return (
         <div className="px-6 py-8">
@@ -36,6 +38,7 @@ export default function Tracks() {
                         isPlaying={isPlaying}
                         onClick={() => playTrack(track, filteredTracks)}
                         onDetails={(item) => navigate(`/tracks/${item.id}`)}
+                        onEdit={setEditingTrack}
                         onDelete={handleDeleteTrack}
                         isAdmin={!!user}
                     />
@@ -46,6 +49,14 @@ export default function Tracks() {
                     </div>
                 )}
             </div>
+
+            {editingTrack && (
+                <TrackEditModal
+                    track={editingTrack}
+                    onClose={() => setEditingTrack(null)}
+                    onSave={updateTrack}
+                />
+            )}
         </div>
     );
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, ChevronRight, Trash2, Info } from 'lucide-react';
+import { Play, ChevronRight, Trash2, Info, Edit3 } from 'lucide-react';
 
 export default function TrackCard({
     track,
@@ -8,6 +8,7 @@ export default function TrackCard({
     isPlaying,
     onClick,
     onDelete,
+    onEdit,
     isAdmin,
     onDetails,
     metaText,
@@ -51,12 +52,26 @@ export default function TrackCard({
             )}
 
             {isAdmin && (
-                <button
-                    onClick={(e) => { e.stopPropagation(); onDelete(track.id); }}
-                    className="p-2 text-slate-600 hover:text-red-400 hover:bg-red-400/10 rounded-full transition-all opacity-0 group-hover:opacity-100"
-                >
-                    <Trash2 size={18} />
-                </button>
+                <>
+                    {onEdit && (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); onEdit(track); }}
+                            className="p-2 text-slate-600 hover:text-blue-300 hover:bg-blue-400/10 rounded-full transition-all opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                            title="Edit"
+                        >
+                            <Edit3 size={18} />
+                        </button>
+                    )}
+                    {onDelete && (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); onDelete(track.id); }}
+                            className="p-2 text-slate-600 hover:text-red-400 hover:bg-red-400/10 rounded-full transition-all opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                            title="Delete"
+                        >
+                            <Trash2 size={18} />
+                        </button>
+                    )}
+                </>
             )}
 
             <div className="ml-2 text-slate-600 group-hover:text-white"><ChevronRight size={20} /></div>
