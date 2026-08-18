@@ -5,11 +5,17 @@
   <meta charset="utf-8" />
   <!-- 1. 여기서 아이콘(파비콘)을 설정해! -->
   <link rel="icon" href="%PUBLIC_URL%/logo.svg" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#0f172a" />
   <meta name="description" content="AI와 함께 만드는 나만의 음악 세계, 모모뮤직Q입니다." />
-  <!-- 애플 기기용 아이콘 -->
-  <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo.svg" />
+
+  <!-- 홈 화면에 추가 시 자체 창(standalone)으로 실행되도록 하는 설정 -->
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="MomoMusicQ" />
+  <!-- 애플 기기용 아이콘 (PNG만 지원됨) -->
+  <link rel="apple-touch-icon" href="%PUBLIC_URL%/apple-touch-icon.png" />
 
   <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
 
