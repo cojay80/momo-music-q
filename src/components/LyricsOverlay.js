@@ -3,33 +3,37 @@ import { X } from 'lucide-react';
 
 export default function LyricsOverlay({
     track,
+    lyrics,
     activeLyricIndex,
     onClose,
     activeLyricRef
 }) {
     if (!track) return null;
+    const displayLyrics = lyrics && lyrics.length ? lyrics : track.lyrics;
 
     return (
         <div className="fixed inset-0 bg-slate-950/95 backdrop-blur-2xl z-[60] flex flex-col animate-fade-in">
             <div className="p-6 flex justify-end">
                 <button onClick={onClose} className="p-2 bg-white/10 rounded-full text-white hover:bg-white/20 transition-colors"><X size={24} /></button>
             </div>
-            <div className="flex-1 flex flex-col items-center px-6 pb-32 overflow-y-auto text-center scrollbar-hide">
+            <div className="flex flex-col items-center px-6 text-center flex-shrink-0">
                 <div className="w-64 h-64 rounded-2xl overflow-hidden shadow-2xl mb-8 flex-shrink-0 border border-white/10">
                     <img src={track.cover} className="w-full h-full object-cover" alt="cover" />
                 </div>
                 <h2 className="text-2xl font-bold text-white mb-2">{track.title}</h2>
-                <p className="text-lg text-purple-400 mb-10">{track.artist}</p>
+                <p className="text-lg text-purple-400 mb-6">{track.artist}</p>
+            </div>
 
+            <div className="flex-1 flex flex-col items-center px-6 pb-32 overflow-y-auto text-center scrollbar-hide">
                 <div className="space-y-6 max-w-lg w-full">
-                    {track.lyrics ? track.lyrics.map((line, i) => {
+                    {displayLyrics ? displayLyrics.map((line, i) => {
                         const lineText = typeof line === 'string' ? line : line?.text || '';
                         return (
                         <p
                             key={i}
                             ref={i === activeLyricIndex ? activeLyricRef : null}
                             className={`text-xl sm:text-2xl font-bold transition-all duration-500 cursor-default leading-relaxed ${i === activeLyricIndex
-                                ? 'text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 scale-110'
+                                ? 'text-white font-black scale-110 drop-shadow-[0_0_18px_rgba(255,255,255,0.45)]'
                                 : 'text-slate-600 hover:text-slate-500'
                                 }`}
                         >
